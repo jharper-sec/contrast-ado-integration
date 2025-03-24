@@ -1,3 +1,19 @@
+# Verify environment variables
+if [ -z "$CONTRAST__API__ORGANIZATION" ] || \
+   [ -z "$CONTRAST__API__URL" ] || \
+   [ -z "$CONTRAST__API__USER_NAME" ] || \
+   [ -z "$CONTRAST__API__API_KEY" ] || \
+   [ -z "$CONTRAST__API__SERVICE_KEY" ]; then
+  echo "Error: Required environment variables are not set."
+  echo "Please ensure the following variables are set:"
+  echo "  - CONTRAST__API__ORGANIZATION"
+  echo "  - CONTRAST__API__URL"
+  echo "  - CONTRAST__API__USER_NAME"
+  echo "  - CONTRAST__API__API_KEY"
+  echo "  - CONTRAST__API__SERVICE_KEY"
+  exit 1
+fi
+
 #!/bin/bash
 # Script to run the Contrast Security Local Scan Engine
 # This script executes the scan and handles result processing
@@ -17,6 +33,22 @@ BRANCH_NAME="$6"
 if [ -z "$SCANNER_PATH" ] || [ -z "$ARTIFACT_PATH" ] || [ -z "$RESULTS_PATH" ]; then
   echo "Error: Missing required arguments"
   echo "Usage: $0 <scanner_path> <artifact_path> <results_path> [project_name] [build_number] [branch_name]"
+  exit 1
+fi
+
+# Verify environment variables
+if [ -z "$CONTRAST__API__ORGANIZATION" ] || \
+   [ -z "$CONTRAST__API__URL" ] || \
+   [ -z "$CONTRAST__API__USER_NAME" ] || \
+   [ -z "$CONTRAST__API__API_KEY" ] || \
+   [ -z "$CONTRAST__API__SERVICE_KEY" ]; then
+  echo "Error: Required environment variables are not set."
+  echo "Please ensure the following variables are set:"
+  echo "  - CONTRAST__API__ORGANIZATION"
+  echo "  - CONTRAST__API__URL"
+  echo "  - CONTRAST__API__USER_NAME"
+  echo "  - CONTRAST__API__API_KEY"
+  echo "  - CONTRAST__API__SERVICE_KEY"
   exit 1
 fi
 
