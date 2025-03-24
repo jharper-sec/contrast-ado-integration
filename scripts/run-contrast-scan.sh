@@ -13,11 +13,12 @@ PROJECT_NAME="$4"
 BUILD_NUMBER="$5"
 BRANCH_NAME="$6"
 SEVERITY_LEVEL="$7"
+ENABLE_SARIF_OUTPUT="${8:-false}"  # New parameter with default value "false"
 
 # Validate required arguments
 if [ -z "$SCANNER_PATH" ] || [ -z "$ARTIFACT_PATH" ] || [ -z "$RESULTS_PATH" ]; then
   echo "Error: Missing required arguments"
-  echo "Usage: $0 <scanner_path> <artifact_path> <results_path> [project_name] [build_number] [branch_name]"
+  echo "Usage: $0 <scanner_path> <artifact_path> <results_path> [project_name] [build_number] [branch_name] [severity_level] [enable_sarif_output]"
   exit 1
 fi
 
@@ -68,6 +69,7 @@ echo "Scanner Path: $SCANNER_PATH"
 echo "Artifact Path: $ARTIFACT_PATH"
 echo "Results Path: $RESULTS_PATH"
 echo "Security Gate Level: $SEVERITY_LEVEL"
+echo "Enable SARIF Output: $ENABLE_SARIF_OUTPUT"
 echo "Contrast URL: $CONTRAST__API__URL"
 echo "Contrast Username: ${CONTRAST__API__USER_NAME:0:3}...${CONTRAST__API__USER_NAME: -4}"
 echo "=================================================="
@@ -109,14 +111,23 @@ for artifact in $ARTIFACTS; do
     JAVA_OPTS="$JAVA_OPTS -Dhttp.nonProxyHosts=\"$NO_PROXY\""
   fi
   
-  # Execute the scanner with appropriate memory allocation
-  java $JAVA_OPTS -jar "$SCANNER_PATH" \
-    --project-name "$PROJECT_NAME" \
-    --label "Build-$BUILD_NUMBER" \
-    --branch "$BRANCH_NAME" \
-    --severity "$SEVERITY_LEVEL" \
-    --output-results "$RESULTS_PATH/results.sarif" \
-    "$artifact"
+  # Prepare base command
+  SCAN_CMD="java $JAVA_OPTS -jar \"$SCANNER_PATH\" \
+    --project-name \"$PROJECT_NAME\" \
+    --label \"Build-$BUILD_NUMBER\" \
+    --branch \"$BRANCH_NAME\" \
+    --severity \"$SEVERITY_LEVEL\""
+    
+  # Add SARIF output option only if enabled
+  if [ "$ENABLE_SARIF_OUTPUT" = "true" ]; then
+    SCAN_CMD="$SCAN_CMD --output-results \"$RESULTS_PATH/results.sarif\""
+  fi
+  
+  # Add artifact path to command
+  SCAN_CMD="$SCAN_CMD \"$artifact\""
+  
+  # Execute the command
+  eval $SCAN_CMD
   
   SCAN_RESULT=$?
   
@@ -148,7 +159,9 @@ for artifact in $ARTIFACTS; do
 done
 
 echo "All scans completed successfully"
-echo "Results saved to: $RESULTS_PATH/results.sarif"
+if [ "$ENABLE_SARIF_OUTPUT" = "true" ]; then
+  echo "Results saved to: $RESULTS_PATH/results.sarif"
+fi
 echo "Results uploaded to Contrast Security platform"
 
 exit 0
