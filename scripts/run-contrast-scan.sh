@@ -1,19 +1,3 @@
-# Verify environment variables
-if [ -z "$CONTRAST__API__ORGANIZATION" ] || \
-   [ -z "$CONTRAST__API__URL" ] || \
-   [ -z "$CONTRAST__API__USER_NAME" ] || \
-   [ -z "$CONTRAST__API__API_KEY" ] || \
-   [ -z "$CONTRAST__API__SERVICE_KEY" ]; then
-  echo "Error: Required environment variables are not set."
-  echo "Please ensure the following variables are set:"
-  echo "  - CONTRAST__API__ORGANIZATION"
-  echo "  - CONTRAST__API__URL"
-  echo "  - CONTRAST__API__USER_NAME"
-  echo "  - CONTRAST__API__API_KEY"
-  echo "  - CONTRAST__API__SERVICE_KEY"
-  exit 1
-fi
-
 #!/bin/bash
 # Script to run the Contrast Security Local Scan Engine
 # This script executes the scan and handles result processing
@@ -50,6 +34,19 @@ if [ -z "$CONTRAST__API__ORGANIZATION" ] || \
   echo "  - CONTRAST__API__API_KEY"
   echo "  - CONTRAST__API__SERVICE_KEY"
   exit 1
+fi
+
+# Check for proxy settings
+if [ -n "$HTTP_PROXY" ]; then
+  echo "Using HTTP proxy: $HTTP_PROXY"
+fi
+
+if [ -n "$HTTPS_PROXY" ]; then
+  echo "Using HTTPS proxy: $HTTPS_PROXY"
+fi
+
+if [ -n "$NO_PROXY" ]; then
+  echo "Using NO_PROXY: $NO_PROXY"
 fi
 
 # Set defaults for optional arguments
@@ -93,9 +90,24 @@ echo "Found $(echo "$ARTIFACTS" | wc -l) artifact(s) to scan"
 for artifact in $ARTIFACTS; do
   echo "Scanning: $artifact"
   
+  # Set up Java command with environment variables
+  JAVA_OPTS="-Xmx12g"
+  
+  # Add proxy settings if they are set in the environment
+  if [ -n "$HTTP_PROXY" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Dhttp.proxyHost=$(echo $HTTP_PROXY | cut -d: -f1 | cut -d/ -f3) -Dhttp.proxyPort=$(echo $HTTP_PROXY | cut -d: -f2)"
+  fi
+  
+  if [ -n "$HTTPS_PROXY" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Dhttps.proxyHost=$(echo $HTTPS_PROXY | cut -d: -f1 | cut -d/ -f3) -Dhttps.proxyPort=$(echo $HTTPS_PROXY | cut -d: -f2)"
+  fi
+  
+  if [ -n "$NO_PROXY" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Dhttp.nonProxyHosts=\"$NO_PROXY\""
+  fi
+  
   # Execute the scanner with appropriate memory allocation
-  # Adjust memory settings based on your environment
-  java -Xmx12g -jar "$SCANNER_PATH" \
+  java $JAVA_OPTS -jar "$SCANNER_PATH" \
     --project-name "$PROJECT_NAME" \
     --label "Build-$BUILD_NUMBER" \
     --branch "$BRANCH_NAME" \

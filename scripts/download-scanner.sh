@@ -57,12 +57,33 @@ AUTH_TOKEN=$(echo -n $CONTRAST__API__USER_NAME:$CONTRAST__API__SERVICE_KEY | bas
 
 # Download the scanner
 echo "Downloading Contrast Security Local Scan Engine..."
-curl \
-  -H "api-key: $CONTRAST__API__API_KEY" \
-  -H "authorization: $AUTH_TOKEN" \
-  -L \
-  -o "$OUTPUT_FILE" \
-  "$CONTRAST__API__URL/organizations/$CONTRAST__API__ORGANIZATION/release-artifacts/local-scanner/$RELEASE?download=true"
+
+# Set up curl command with basic options
+CURL_OPTS=(
+  "-H" "api-key: $CONTRAST__API__API_KEY"
+  "-H" "authorization: $AUTH_TOKEN"
+  "-L"
+  "-o" "$OUTPUT_FILE"
+)
+
+# Add proxy settings if they are set in the environment
+if [ -n "$HTTP_PROXY" ]; then
+  echo "Using HTTP proxy: $HTTP_PROXY"
+  CURL_OPTS+=("--proxy" "$HTTP_PROXY")
+fi
+
+if [ -n "$HTTPS_PROXY" ]; then
+  echo "Using HTTPS proxy: $HTTPS_PROXY"
+  CURL_OPTS+=("--proxy" "$HTTPS_PROXY")
+fi
+
+if [ -n "$NO_PROXY" ]; then
+  echo "Using NO_PROXY: $NO_PROXY"
+  CURL_OPTS+=("--noproxy" "$NO_PROXY")
+fi
+
+# Execute curl command with all options
+curl "${CURL_OPTS[@]}" "$CONTRAST__API__URL/organizations/$CONTRAST__API__ORGANIZATION/release-artifacts/local-scanner/$RELEASE?download=true"
 
 DOWNLOAD_STATUS=$?
 if [ $DOWNLOAD_STATUS -ne 0 ]; then
