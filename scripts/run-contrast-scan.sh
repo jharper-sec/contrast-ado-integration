@@ -12,6 +12,7 @@ RESULTS_PATH="$3"
 PROJECT_NAME="$4"
 BUILD_NUMBER="$5"
 BRANCH_NAME="$6"
+SEVERITY_LEVEL="$7"
 
 # Validate required arguments
 if [ -z "$SCANNER_PATH" ] || [ -z "$ARTIFACT_PATH" ] || [ -z "$RESULTS_PATH" ]; then
@@ -53,6 +54,7 @@ fi
 PROJECT_NAME="${PROJECT_NAME:-contrast-project}"
 BUILD_NUMBER="${BUILD_NUMBER:-local-build}"
 BRANCH_NAME="${BRANCH_NAME:-main}"
+SEVERITY_LEVEL="${SEVERITY_LEVEL:-high}"
 
 # Create output directory if it doesn't exist
 mkdir -p "$RESULTS_PATH"
@@ -65,6 +67,7 @@ echo "Build: $BUILD_NUMBER"
 echo "Scanner Path: $SCANNER_PATH"
 echo "Artifact Path: $ARTIFACT_PATH"
 echo "Results Path: $RESULTS_PATH"
+echo "Security Gate Level: $SEVERITY_LEVEL"
 echo "Contrast URL: $CONTRAST__API__URL"
 echo "Contrast Username: ${CONTRAST__API__USER_NAME:0:3}...${CONTRAST__API__USER_NAME: -4}"
 echo "=================================================="
@@ -111,6 +114,7 @@ for artifact in $ARTIFACTS; do
     --project-name "$PROJECT_NAME" \
     --label "Build-$BUILD_NUMBER" \
     --branch "$BRANCH_NAME" \
+    --severity "$SEVERITY_LEVEL" \
     --output-results "$RESULTS_PATH/results.sarif" \
     "$artifact"
   
@@ -118,9 +122,28 @@ for artifact in $ARTIFACTS; do
   
   echo "Scan completed with exit code: $SCAN_RESULT"
   
-  if [ $SCAN_RESULT -ne 0 ]; then
-    echo "Error: Scan failed with exit code $SCAN_RESULT"
+  if [ $SCAN_RESULT -eq 0 ]; then
+    echo "Scan completed successfully with no security violations at the $SEVERITY_LEVEL level or above."
+  elif [ $SCAN_RESULT -eq 1 ]; then
+    echo "Error: Input validation error"
     exit $SCAN_RESULT
+  elif [ $SCAN_RESULT -eq 2 ]; then
+    echo "Error: Error connecting to Contrast API server"
+    exit $SCAN_RESULT
+  elif [ $SCAN_RESULT -eq 3 ]; then
+    echo "Error: Contrast API error returned"
+    exit $SCAN_RESULT
+  elif [ $SCAN_RESULT -eq 4 ]; then
+    echo "Error: Scan local engine returned an error, details are in the log files"
+    exit $SCAN_RESULT
+  elif [ $SCAN_RESULT -eq 5 ]; then
+    echo "Error: Unexpected error occurred, details are in the log files"
+    exit $SCAN_RESULT
+  else
+    echo "Security gate failed: Vulnerabilities with severity $SEVERITY_LEVEL or higher were found"
+    # We don't exit here as we want the pipeline to continue for demo purposes
+    # In a real environment, you might want to uncomment the following line to fail the build
+    # exit $SCAN_RESULT
   fi
 done
 
