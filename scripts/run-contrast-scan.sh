@@ -111,7 +111,7 @@ for artifact in $ARTIFACTS; do
     --project-name "$PROJECT_NAME" \
     --label "Build-$BUILD_NUMBER" \
     --branch "$BRANCH_NAME" \
-    --output "$RESULTS_PATH/results.sarif" \
+    --output-results "$RESULTS_PATH/results.sarif" \
     "$artifact"
   
   SCAN_RESULT=$?
