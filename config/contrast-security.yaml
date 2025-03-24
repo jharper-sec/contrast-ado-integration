@@ -1,0 +1,37 @@
+# Contrast Security Configuration
+# This file defines the configuration for Contrast Security agents
+# Typically used by Contrast Assess agents, but included here for reference
+
+api:
+  url: ${CONTRAST__API__URL}
+  api_key: ${CONTRAST__API__API_KEY}
+  service_key: ${CONTRAST__API__SERVICE_KEY}
+  user_name: ${CONTRAST__API__USER_NAME}
+
+agent:
+  logger:
+    level: INFO
+    path: contrast_agent.log
+    
+  security_logger:
+    level: ERROR
+    path: contrast_security.log
+
+scan:
+  auto_update: true
+  metadata:
+    build_number: ${BUILD_NUMBER}
+    build_id: ${BUILD_ID}
+    branch: ${BRANCH_NAME}
+    repository: ${REPOSITORY_NAME}
+    pipeline: ${PIPELINE_NAME}
+    organization: ${ORGANIZATION_NAME}
+    project: ${PROJECT_NAME}
+
+proxy:
+  # Uncomment and configure if using a proxy
+  # host: ${HTTP_PROXY_HOST}
+  # port: ${HTTP_PROXY_PORT}
+  # username: ${HTTP_PROXY_USERNAME}
+  # password: ${HTTP_PROXY_PASSWORD}
+  # non_proxy_hosts: ${NO_PROXY}

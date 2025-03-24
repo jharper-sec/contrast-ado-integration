@@ -1,0 +1,81 @@
+{
+  "name": "Azure DevOps Pipeline Security Gate",
+  "description": "Security gate policy for Azure DevOps pipelines",
+  "enabled": true,
+  "thresholds": {
+    "critical": {
+      "limit": 0,
+      "action": "FAIL"
+    },
+    "high": {
+      "limit": 0,
+      "action": "FAIL"
+    },
+    "medium": {
+      "limit": 5,
+      "action": "WARN"
+    },
+    "low": {
+      "limit": 10,
+      "action": "ALLOW"
+    }
+  },
+  "branches": {
+    "main": {
+      "critical": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "high": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "medium": {
+        "limit": 0,
+        "action": "FAIL"
+      }
+    },
+    "release/*": {
+      "critical": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "high": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "medium": {
+        "limit": 0,
+        "action": "FAIL"
+      }
+    },
+    "develop": {
+      "critical": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "high": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "medium": {
+        "limit": 5,
+        "action": "WARN"
+      }
+    },
+    "feature/*": {
+      "critical": {
+        "limit": 0,
+        "action": "FAIL"
+      },
+      "high": {
+        "limit": 2,
+        "action": "WARN"
+      },
+      "medium": {
+        "limit": 10,
+        "action": "ALLOW"
+      }
+    }
+  }
+}
